@@ -11,6 +11,7 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.example.smartmeet.R;
 import com.example.smartmeet.theme.ThemePreferences;
 
 public class MainActivity extends AppCompatActivity {
