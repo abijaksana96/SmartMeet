@@ -8,6 +8,10 @@ android {
     namespace = "com.example.smartmeet"
     compileSdk = 35
 
+    buildFeatures {
+        viewBinding = true
+    }
+
     defaultConfig {
         applicationId = "com.example.smartmeet"
         minSdk = 24
