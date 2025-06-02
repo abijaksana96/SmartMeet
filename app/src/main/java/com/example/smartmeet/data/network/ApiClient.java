@@ -28,7 +28,7 @@ public class ApiClient {
                                 .build();
                         return chain.proceed(request);
                     })
-                    .addInterceptor(logging) // <--- Tambahkan baris ini!
+                    .addInterceptor(logging)
                     .build();
 
             nominatimRetrofit = new Retrofit.Builder()
