@@ -1,4 +1,4 @@
-package com.example.smartmeet;
+package com.example.smartmeet.ui;
 
 import android.os.Bundle;
 
@@ -11,6 +11,7 @@ import androidx.navigation.NavController;
 import androidx.navigation.fragment.NavHostFragment;
 import androidx.navigation.ui.NavigationUI;
 
+import com.example.smartmeet.R;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class MainActivity extends AppCompatActivity {
