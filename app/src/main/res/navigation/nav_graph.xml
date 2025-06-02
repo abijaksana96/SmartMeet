@@ -9,7 +9,11 @@
         android:id="@+id/inputFragment"
         android:name="com.example.smartmeet.ui.InputFragment"
         android:label="Input Lokasi"
-        tools:layout="@layout/fragment_input" />
+        tools:layout="@layout/fragment_input">
+        <action
+            android:id="@+id/inputFragment_to_resultsFragment"
+            app:destination="@+id/resultsFragment"/>
+    </fragment>
     <fragment
         android:id="@+id/resultsFragment"
         android:name="com.example.smartmeet.ui.ResultsFragment"
