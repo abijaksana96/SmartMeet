@@ -47,6 +47,7 @@ public class InputFragment extends Fragment {
     private final int maxInput = 5;
     private Handler handler = new Handler(Looper.getMainLooper()); // main thread
     private Call<List<GeoResult>> currentAutocompleteCall;
+    private Map<AutoCompleteTextView, Boolean> isSelectingSuggestion = new HashMap<>();
 
     // Gunakan Map untuk menyimpan Runnable debounce per AutoCompleteTextView
     private Map<AutoCompleteTextView, Runnable> debounceRunnables = new HashMap<>();
@@ -157,6 +158,7 @@ public class InputFragment extends Fragment {
         }
         textWatchers.clear();
         debounceRunnables.clear();
+        isSelectingSuggestion.clear();
         binding = null;
     }
 
@@ -168,6 +170,19 @@ public class InputFragment extends Fragment {
 
         inputField.setThreshold(1); // threshold untuk minimal
         inputField.setOnDismissListener(() -> Log.d("AutoComplete", "Dismissed"));
+
+        // Inisialisasi flag untuk inputField ini
+        isSelectingSuggestion.put(inputField, false);
+
+        // Set listener untuk item click pada dropdown
+        inputField.setOnItemClickListener((parent, view, position, id) -> {
+            // Setelah item diklik, set flag menjadi true
+            isSelectingSuggestion.put(inputField, true);
+            // Kosongkan adapter agar suggestion tidak muncul lagi
+            suggestionAdapter.clear();
+            suggestionAdapter.notifyDataSetChanged();
+            inputField.dismissDropDown();
+        });
 
         // Hapus TextWatcher dan Runnable yang lama jika ada untuk inputField ini
         if (textWatchers.containsKey(inputField)) {
@@ -181,12 +196,27 @@ public class InputFragment extends Fragment {
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
+                if (isSelectingSuggestion.get(inputField) != null && isSelectingSuggestion.get(inputField)) {
+                    isSelectingSuggestion.put(inputField, false);
+                }
                 // Hapus callback sebelumnya untuk inputField ini setiap kali teks berubah
                 handler.removeCallbacks(debounceRunnables.get(inputField));
             }
 
             @Override
             public void afterTextChanged(android.text.Editable s) {
+                // Periksa apakah perubahan teks ini berasal dari pemilihan suggestion
+                if (isSelectingSuggestion.get(inputField) != null && isSelectingSuggestion.get(inputField)) {
+                    Log.d("AutoComplete", "Ignoring afterTextChanged due to suggestion selection for: " + s.toString());
+                    // Reset flag setelah pemrosesan, sehingga ketikan berikutnya akan memicu pencarian
+                    isSelectingSuggestion.put(inputField, false);
+                    // Pastikan dropdown ditutup dan adapter dikosongkan
+                    suggestionAdapter.clear();
+                    suggestionAdapter.notifyDataSetChanged();
+                    inputField.dismissDropDown();
+                    return; // Hentikan pemrosesan lebih lanjut
+                }
+
                 if (s.length() >= 2) {
                     // Buat Runnable baru dengan query saat ini
                     Runnable searchRunnable = () -> {
@@ -253,6 +283,12 @@ public class InputFragment extends Fragment {
 
                     // Runnable di-post ke message queue UI thread
                     inputField.postDelayed(() -> {
+                        // Tambahkan pengecekan flag isSelectingSuggestion
+                        if (isSelectingSuggestion.get(inputField) != null && isSelectingSuggestion.get(inputField)) {
+                            // Jangan tampilkan dropdown jika user baru saja memilih suggestion
+                            inputField.dismissDropDown();
+                            return;
+                        }
                         // Periksa lagi kondisi SEBELUM showDropDown
                         // Fokus utama adalah apakah teks masih sama dan adapter punya item
                         if (inputField.isFocused() && inputField.getText().toString().equals(query)) {
@@ -374,6 +410,7 @@ public class InputFragment extends Fragment {
         for (AutoCompleteTextView input : addressFields) {
             if (input != null) {
                 input.setText("");
+                isSelectingSuggestion.put(input, false); // Reset flag
             }
         }
 
