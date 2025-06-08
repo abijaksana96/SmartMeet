@@ -24,6 +24,7 @@ import com.example.smartmeet.data.model.GeoResult;
 import com.example.smartmeet.data.network.ApiClient;
 import com.example.smartmeet.data.network.NominatimApiService;
 import com.example.smartmeet.databinding.FragmentInputBinding;
+import com.example.smartmeet.util.LocationUtil;
 import com.google.android.material.textfield.TextInputLayout;
 
 import java.io.IOException;
@@ -48,6 +49,7 @@ public class InputFragment extends Fragment {
     private Handler handler = new Handler(Looper.getMainLooper()); // main thread
     private Call<List<GeoResult>> currentAutocompleteCall;
     private Map<AutoCompleteTextView, Boolean> isSelectingSuggestion = new HashMap<>();
+    private LocationUtil locationUtil = new LocationUtil();
 
     // Gunakan Map untuk menyimpan Runnable debounce per AutoCompleteTextView
     private Map<AutoCompleteTextView, Runnable> debounceRunnables = new HashMap<>();
@@ -399,8 +401,47 @@ public class InputFragment extends Fragment {
 
         Log.d("InputFragment", "Semua alamat berhasil di-geocode: " + geocodedResults.size());
 
-        NavController navController = Navigation.findNavController(requireView());
-        navController.navigate(R.id.inputFragment_to_resultsFragment);
+        if (geocodedResults.size() == addresses.size() && !geocodedResults.isEmpty()) {
+            LocationUtil.Midpoint midpoint = locationUtil.calculateMidpoint(geocodedResults);
+            String selectedAmenity = binding.amenitySpinner.getSelectedItem().toString();
+
+            if (midpoint != null) {
+                Log.d("InputFragment", "Midpoint: " + midpoint.latitude + ", " + midpoint.longitude);
+                // Navigasi ke ResultsFragment
+                Bundle bundle = new Bundle();
+                bundle.putDouble("midpoint_lat", midpoint.latitude);
+                bundle.putDouble("midpoint_lon", midpoint.longitude);
+
+                // Kirim array String lat/lon
+                ArrayList<String> latitudes = new ArrayList<>();
+                ArrayList<String> longitudes = new ArrayList<>();
+                for (GeoResult res : geocodedResults) {
+                    latitudes.add(res.getLat());
+                    longitudes.add(res.getLon());
+                }
+                bundle.putStringArrayList("participant_lats", latitudes);
+                bundle.putStringArrayList("participant_lons", longitudes);
+                bundle.putString("amenity", selectedAmenity);
+
+                // Menggunakan NavController untuk navigasi
+                // Pastikan ID R.id.action_inputFragment_to_resultsFragment ada di nav_graph.xml
+                // <action android:id="@+id/action_inputFragment_to_resultsFragment"
+                //         app:destination="@id/resultsFragment" />
+                // Tambahkan action ini di dalam <fragment android:id="@+id/inputFragment" ... >
+                 NavController navController = Navigation.findNavController(requireActivity(), R.id.nav_host_fragment);
+                 navController.navigate(R.id.inputFragment_to_resultsFragment, bundle);
+
+                // Jika tidak pakai action, langsung ke ID tujuan:
+                // getParentFragmentManager().setFragmentResult("requestKey", bundle); // Cara alternatif kirim data
+                // Navigation.findNavController(getView()).navigate(R.id.resultsFragment, bundle);
+
+            } else {
+                Toast.makeText(getContext(), "Tidak bisa menghitung midpoint.", Toast.LENGTH_SHORT).show();
+            }
+        }
+
+//        NavController navController = Navigation.findNavController(requireView());
+//        navController.navigate(R.id.inputFragment_to_resultsFragment);
     }
 
     private void resetInputViews() {
