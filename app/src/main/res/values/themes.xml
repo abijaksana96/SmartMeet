@@ -3,11 +3,16 @@
     <style name="Base.Theme.SmartMeet" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Customize your light theme here. -->
         <item name="colorPrimary">@color/biru_gelap_kebiruan</item>
-        <item name="colorPrimaryVariant">@color/biru_sedang_kebiruan</item> <item name="colorOnPrimary">@color/light_on_primary</item> <item name="colorSecondary">@color/biru_muda_cerah</item>
+        <item name="colorPrimaryVariant">@color/biru_sedang_kebiruan</item>
+        <item name="colorOnPrimary">@color/light_on_primary</item>
+        <item name="colorSecondary">@color/biru_muda_cerah</item>
         <item name="colorSecondaryVariant">@color/hijau_tosca_pudar</item>
-        <item name="colorOnSecondary">@color/light_on_secondary</item> <item name="android:colorBackground">@color/light_background</item>
+        <item name="colorOnSecondary">@color/light_on_secondary</item>
+        <item name="android:colorBackground">@color/light_background</item>
         <item name="colorSurface">@color/light_surface</item>
-        <item name="colorOnBackground">@color/light_on_background</item> <item name="colorOnSurface">@color/light_on_surface</item>     <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
+        <item name="colorOnBackground">@color/light_on_background</item>
+        <item name="colorOnSurface">@color/light_on_surface</item>
+        <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
         <item name="android:textColorPrimary">@color/light_on_background</item>
         <item name="android:textColorSecondary">@color/light_text_secondary</item>
 

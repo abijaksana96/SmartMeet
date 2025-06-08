@@ -10,7 +10,11 @@
 
     <color name="light_background">#FFFFFF</color>
     <color name="light_surface">#FFFFFF</color>
-    <color name="light_on_background">#212121</color> <color name="light_on_surface">#212121</color>   <color name="light_on_primary">#FFFFFF</color>  <color name="light_on_secondary">#FFFFFF</color> <color name="light_text_secondary">#757575</color>
+    <color name="light_on_background">#212121</color>
+    <color name="light_on_surface">#212121</color>
+    <color name="light_on_primary">#FFFFFF</color>
+    <color name="light_on_secondary">#FFFFFF</color>
+    <color name="light_text_secondary">#757575</color>
     <color name="light_divider">#E0E0E0</color>
 
     <color name="dark_background">#121212</color> <color name="dark_surface">#2C2C2C</color>   <color name="dark_on_background">#E0E0E0</color> <color name="dark_on_surface">#E0E0E0</color>   <color name="dark_on_primary">#212121</color>  <color name="dark_on_secondary">#212121</color> <color name="dark_text_secondary">#B0B0B0</color>
