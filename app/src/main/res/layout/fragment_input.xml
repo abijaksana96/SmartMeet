@@ -1,171 +1,219 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:orientation="vertical"
     android:id="@+id/inputFragment"
-    android:padding="10dp"
     tools:context=".ui.InputFragment">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textColor="?attr/colorPrimary"
-        android:text="Tentukan tempat bertemu!"
-        android:textStyle="bold"
-        android:textSize="20sp"/>
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Masukkan alamat anda dengan orang yang ingin anda temui"/>
-
     <LinearLayout
-        android:id="@+id/inputLayout"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:padding="10dp">
 
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/tf_1"
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="?attr/colorPrimary"
+            android:text="Tentukan tempat bertemu!"
+            android:textStyle="bold"
+            android:textSize="20sp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Masukkan alamat anda dengan orang yang ingin anda temui"/>
+
+        <LinearLayout
+            android:id="@+id/inputLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="10dp"
-            android:padding="2dp"
-            app:hintTextColor="?attr/colorOnBackground"
-            android:hint="Alamat Pengguna 1"
-            app:boxBackgroundMode="outline">
+            android:orientation="vertical">
 
-            <AutoCompleteTextView
-                android:id="@+id/address1"
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tf_1"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:padding="10dp" />
-        </com.google.android.material.textfield.TextInputLayout>
+                android:layout_margin="10dp"
+                android:padding="2dp"
+                app:hintTextColor="?attr/colorOnBackground"
+                android:hint="Alamat Pengguna 1"
+                app:boxBackgroundMode="outline">
 
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/tf_2"
+                <AutoCompleteTextView
+                    android:id="@+id/address1"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="10dp" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tf_2"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="10dp"
+                android:padding="2dp"
+                app:hintTextColor="?attr/colorOnBackground"
+                android:hint="Alamat Pengguna 2"
+                app:boxBackgroundMode="outline">
+
+                <AutoCompleteTextView
+                    android:id="@+id/address2"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="10dp" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tf_3"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="10dp"
+                android:padding="2dp"
+                app:hintTextColor="?attr/colorOnBackground"
+                android:hint="Alamat Pengguna 3"
+                app:boxBackgroundMode="outline"
+                android:visibility="gone">
+
+                <AutoCompleteTextView
+                    android:id="@+id/address3"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="10dp" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tf_4"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="10dp"
+                android:padding="2dp"
+                app:hintTextColor="?attr/colorOnBackground"
+                android:hint="Alamat Pengguna 4"
+                app:boxBackgroundMode="outline"
+                android:visibility="gone">
+
+                <AutoCompleteTextView
+                    android:id="@+id/address4"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="10dp" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tf_5"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="10dp"
+                android:padding="2dp"
+                app:hintTextColor="?attr/colorOnBackground"
+                android:hint="Alamat Pengguna 5"
+                app:boxBackgroundMode="outline"
+                android:visibility="gone">
+
+                <AutoCompleteTextView
+                    android:id="@+id/address5"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="10dp" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+        </LinearLayout>
+
+        <androidx.appcompat.widget.AppCompatSpinner
+            android:id="@+id/amenity_spinner"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_margin="8dp"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:background="@drawable/spinner_background"
+            android:spinnerMode="dropdown"
+            android:dropDownVerticalOffset="8dp"
+            android:textAlignment="center"
+            android:theme="@style/ThemeOverlay.Material3.MaterialAlertDialog" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/add_button"
+            android:layout_width="370dp"
+            android:layout_height="35dp"
+            android:layout_gravity="center"
+            app:cornerRadius="8dp"
+            android:text="Tambah alamat pengguna"
+            android:textSize="12sp"
+            android:padding="0dp"
+            android:visibility="visible"/>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/del_button"
+            android:layout_width="370dp"
+            android:layout_height="35dp"
+            android:layout_gravity="center"
+            app:cornerRadius="8dp"
+            android:text="Hapus alamat pengguna"
+            android:textSize="12sp"
+            android:padding="0dp"
+            android:backgroundTint="@color/light_text_secondary"
+            app:strokeColor="?attr/colorSecondary"
+            app:strokeWidth="1dp"/>
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1"/>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/search_button"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="10dp"
-            android:padding="2dp"
-            app:hintTextColor="?attr/colorOnBackground"
-            android:hint="Alamat Pengguna 2"
-            app:boxBackgroundMode="outline">
-
-            <AutoCompleteTextView
-                android:id="@+id/address2"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:padding="10dp" />
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/tf_3"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_margin="10dp"
-            android:padding="2dp"
-            app:hintTextColor="?attr/colorOnBackground"
-            android:hint="Alamat Pengguna 3"
-            app:boxBackgroundMode="outline"
-            android:visibility="gone">
-
-            <AutoCompleteTextView
-                android:id="@+id/address3"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:padding="10dp" />
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/tf_4"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_margin="10dp"
-            android:padding="2dp"
-            app:hintTextColor="?attr/colorOnBackground"
-            android:hint="Alamat Pengguna 4"
-            app:boxBackgroundMode="outline"
-            android:visibility="gone">
-
-            <AutoCompleteTextView
-                android:id="@+id/address4"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:padding="10dp" />
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/tf_5"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_margin="10dp"
-            android:padding="2dp"
-            app:hintTextColor="?attr/colorOnBackground"
-            android:hint="Alamat Pengguna 5"
-            app:boxBackgroundMode="outline"
-            android:visibility="gone">
-
-            <AutoCompleteTextView
-                android:id="@+id/address5"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:padding="10dp" />
-        </com.google.android.material.textfield.TextInputLayout>
+            android:text="Cari titik temu"
+            android:layout_gravity="center"
+            />
 
     </LinearLayout>
 
-    <androidx.appcompat.widget.AppCompatSpinner
-        android:id="@+id/amenity_spinner"
+    <FrameLayout
+        android:id="@+id/loading_overlay"
         android:layout_width="match_parent"
-        android:layout_height="48dp"
-        android:layout_margin="8dp"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
-        android:background="@drawable/spinner_background"
-        android:spinnerMode="dropdown"
-        android:dropDownVerticalOffset="8dp"
-        android:textAlignment="center"
-        android:theme="@style/ThemeOverlay.Material3.MaterialAlertDialog" />
+        android:layout_height="match_parent"
+        android:background="#88000000"
+        android:visibility="gone"
+        android:clickable="true"
+        android:focusable="true"
+        android:elevation="10dp">
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/add_button"
-        android:layout_width="370dp"
-        android:layout_height="35dp"
-        android:layout_gravity="center"
-        app:cornerRadius="8dp"
-        android:text="Tambah alamat pengguna"
-        android:textSize="12sp"
-        android:padding="0dp"
-        android:visibility="visible"/>
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:layout_gravity="center">
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/del_button"
-        android:layout_width="370dp"
-        android:layout_height="35dp"
-        android:layout_gravity="center"
-        app:cornerRadius="8dp"
-        android:text="Hapus alamat pengguna"
-        android:textSize="12sp"
-        android:padding="0dp"
-        android:backgroundTint="@color/light_text_secondary"
-        app:strokeColor="?attr/colorSecondary"
-        app:strokeWidth="1dp"/>
+            <ProgressBar
+                android:id="@+id/geocode_progress"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                style="?android:attr/progressBarStyleLarge"
+                android:visibility="visible"/>
 
-    <View
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_weight="1"/>
+            <TextView
+                android:id="@+id/loading_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Sedang mencari koordinat alamat..."
+                android:textColor="@android:color/white"
+                android:layout_marginTop="16dp"/>
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/search_button"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Cari titik temu"
-        android:layout_gravity="center"
-        />
+            <Button
+                android:id="@+id/retry_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Coba Lagi"
+                android:layout_marginTop="16dp"
+                android:visibility="gone"/>
+        </LinearLayout>
+    </FrameLayout>
 
-</LinearLayout>
+</FrameLayout>
