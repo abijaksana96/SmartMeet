@@ -422,6 +422,9 @@ public class InputFragment extends Fragment {
         bundle.putStringArrayList("participant_lons", longitudes);
         bundle.putString("amenity", selectedAmenity);
 
+        // Tambahkan baris berikut:
+        bundle.putStringArrayList("input_addresses", new ArrayList<>(addresses));
+
         // Navigasi ke ResultsFragment
         hideLoadingOverlay();
         NavController navController = Navigation.findNavController(requireActivity(), R.id.nav_host_fragment);
