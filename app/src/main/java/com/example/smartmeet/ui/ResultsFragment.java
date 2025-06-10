@@ -1,10 +1,15 @@
 package com.example.smartmeet.ui;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
 import android.preference.PreferenceManager;
@@ -97,9 +102,22 @@ public class ResultsFragment extends Fragment {
                     GeoPoint participantPoint = new GeoPoint(lat, lon);
                     Marker participantMarker = new Marker(map);
                     participantMarker.setPosition(participantPoint);
-                    participantMarker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
+                    participantMarker.setAnchor(0.5f, 0.9f); // X=0.5 (tengah), Y=0.9 (sedikit di atas bawah)
                     participantMarker.setTitle("Peserta " + (i + 1));
-                    // participantMarker.setIcon(getResources().getDrawable(R.drawable.ic_participant_marker)); // Custom icon
+
+                    Drawable vectorDrawable = ContextCompat.getDrawable(getContext(), R.drawable.ic_marker);
+                    Bitmap bitmap = Bitmap.createBitmap(vectorDrawable.getIntrinsicWidth(),
+                            vectorDrawable.getIntrinsicHeight(),
+                            Bitmap.Config.ARGB_8888);
+                    Canvas canvas = new Canvas(bitmap);
+                    vectorDrawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
+                    vectorDrawable.draw(canvas);
+
+                    // Set ke marker
+                    Drawable markerDrawable = new BitmapDrawable(getResources(), bitmap);
+                    participantMarker.setIcon(markerDrawable);
+                    participantMarker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
+
                     map.getOverlays().add(participantMarker);
                 } catch (NumberFormatException e) {
                     Log.e("ResultsFragment", "Invalid participant lat/lon", e);
