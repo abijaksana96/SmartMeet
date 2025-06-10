@@ -141,6 +141,12 @@ public class InputFragment extends Fragment {
             performGeocoding();
         });
 
+        binding.retryButton.setOnClickListener(v -> {
+            addresses = new ArrayList<>(lastGeocodingAddresses);
+            inputVisibleCount = lastGeocodingVisibleCount;
+            performGeocoding();
+        });
+
         updateButtonVisibility(inputVisibleCount, maxInput);
     }
 
