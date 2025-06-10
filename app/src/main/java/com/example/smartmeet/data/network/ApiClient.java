@@ -13,6 +13,10 @@ public class ApiClient {
     private static Retrofit nominatimRetrofit = null;
     private static final String OVERPASS_BASE_URL = "https://overpass-api.de";
     private static Retrofit overpassRetrofit = null;
+    private static final String ORS_BASE_URL = "https://api.openrouteservice.org";
+    private static Retrofit orsRetrofit = null;
+    public static final String ORS_API_KEY = "5b3ce3597851110001cf62481cae75e0f731453db8d110baba9299e3"; // GANTI DENGAN API KEY ANDA
+
 
     public static NominatimApiService getNominatimApiService() {
         if (nominatimRetrofit == null) {
@@ -57,5 +61,22 @@ public class ApiClient {
                     .build();
         }
         return overpassRetrofit.create(OverpassApiService.class);
+    }
+
+    public static OpenRouteServiceApi getOpenRouteServiceApi() {
+        if (orsRetrofit == null) {
+            HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
+            logging.setLevel(HttpLoggingInterceptor.Level.BODY);
+            OkHttpClient client = new OkHttpClient.Builder()
+                    .addInterceptor(logging)
+                    .build();
+
+            orsRetrofit = new Retrofit.Builder()
+                    .baseUrl(ORS_BASE_URL)
+                    .client(client)
+                    .addConverterFactory(GsonConverterFactory.create())
+                    .build();
+        }
+        return orsRetrofit.create(OpenRouteServiceApi.class);
     }
 }
