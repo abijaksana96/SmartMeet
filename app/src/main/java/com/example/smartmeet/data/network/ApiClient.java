@@ -11,6 +11,8 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class ApiClient {
     private static final String NOMINATIM_BASE_URL = "https://nominatim.openstreetmap.org";
     private static Retrofit nominatimRetrofit = null;
+    private static final String OVERPASS_BASE_URL = "https://overpass-api.de";
+    private static Retrofit overpassRetrofit = null;
 
     public static NominatimApiService getNominatimApiService() {
         if (nominatimRetrofit == null) {
@@ -38,5 +40,22 @@ public class ApiClient {
                     .build();
         }
         return nominatimRetrofit.create(NominatimApiService.class);
+    }
+
+    public static OverpassApiService getOverpassApiService() {
+        if (overpassRetrofit == null) {
+            HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
+            logging.setLevel(HttpLoggingInterceptor.Level.BODY);
+            OkHttpClient client = new OkHttpClient.Builder()
+                    .addInterceptor(logging)
+                    .build();
+
+            overpassRetrofit = new Retrofit.Builder()
+                    .baseUrl(OVERPASS_BASE_URL)
+                    .client(client)
+                    .addConverterFactory(GsonConverterFactory.create())
+                    .build();
+        }
+        return overpassRetrofit.create(OverpassApiService.class);
     }
 }

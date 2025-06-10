@@ -24,6 +24,7 @@ import com.example.smartmeet.data.model.GeoResult;
 import com.example.smartmeet.data.network.ApiClient;
 import com.example.smartmeet.data.network.NominatimApiService;
 import com.example.smartmeet.databinding.FragmentInputBinding;
+import com.example.smartmeet.util.LocationUtil;
 import com.google.android.material.textfield.TextInputLayout;
 
 import java.io.IOException;
@@ -48,12 +49,14 @@ public class InputFragment extends Fragment {
     private Handler handler = new Handler(Looper.getMainLooper()); // main thread
     private Call<List<GeoResult>> currentAutocompleteCall;
     private Map<AutoCompleteTextView, Boolean> isSelectingSuggestion = new HashMap<>();
+    private LocationUtil locationUtil = new LocationUtil();
 
     // Gunakan Map untuk menyimpan Runnable debounce per AutoCompleteTextView
     private Map<AutoCompleteTextView, Runnable> debounceRunnables = new HashMap<>();
     private Map<AutoCompleteTextView, TextWatcher> textWatchers = new HashMap<>(); // Untuk membersihkan listener
 
     private static final long DEBOUNCE_DELAY = 500;
+
     private boolean isGeocodingError = false;
     private int lastGeocodingVisibleCount = 0;
     private List<String> lastGeocodingAddresses = new ArrayList<>();
@@ -125,9 +128,10 @@ public class InputFragment extends Fragment {
 
         // Click listener untuk button search
         binding.searchButton.setOnClickListener(v -> {
-            addresses.clear();
-            geocodedResults.clear();
-            addresses = getNonEmptyAddresses(inputVisibleCount);
+            addresses.clear(); // membersihkan list terlebih dahulu
+            geocodedResults.clear(); // membersihkan hasil geocoding
+
+            addresses = getNonEmptyAddresses(inputVisibleCount); // mendapatkan address yang tidak empty
 
             if (addresses.size() < 2) {
                 Toast.makeText(getContext(), "Masukkan minimal 2 alamat", Toast.LENGTH_SHORT).show();
@@ -385,17 +389,45 @@ public class InputFragment extends Fragment {
         }
     }
 
-    // Fungsi ketika semua geocoding berhasil
+    // Tambahkan logika midpoint dan pengiriman bundle ke ResultsFragment
     private void onAllGeocodingCompleted() {
-        if (isGeocodingError) {
+        if (geocodedResults.isEmpty()) {
             showLoadingOverlay(true);
-            Toast.makeText(getContext(), "Ada alamat gagal di-geocode. Coba lagi!", Toast.LENGTH_LONG).show();
-        } else {
-            hideLoadingOverlay();
-            NavController navController = Navigation.findNavController(requireView());
-            navController.navigate(R.id.inputFragment_to_resultsFragment);
+            Toast.makeText(getContext(), "Semua alamat gagal di-geocode. Coba lagi!", Toast.LENGTH_LONG).show();
+            return;
         }
+
+        // Hitung midpoint
+        LocationUtil.Midpoint midpoint = locationUtil.calculateMidpoint(geocodedResults);
+        if (midpoint == null) {
+            Toast.makeText(getContext(), "Tidak bisa menghitung titik tengah.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Ambil amenity yang dipilih (jika ada spinner)
+        String selectedAmenity = binding.amenitySpinner.getSelectedItem().toString();
+
+        // Siapkan bundle
+        Bundle bundle = new Bundle();
+        bundle.putDouble("midpoint_lat", midpoint.latitude);
+        bundle.putDouble("midpoint_lon", midpoint.longitude);
+
+        ArrayList<String> latitudes = new ArrayList<>();
+        ArrayList<String> longitudes = new ArrayList<>();
+        for (GeoResult res : geocodedResults) {
+            latitudes.add(res.getLat());
+            longitudes.add(res.getLon());
+        }
+        bundle.putStringArrayList("participant_lats", latitudes);
+        bundle.putStringArrayList("participant_lons", longitudes);
+        bundle.putString("amenity", selectedAmenity);
+
+        // Navigasi ke ResultsFragment
+        hideLoadingOverlay();
+        NavController navController = Navigation.findNavController(requireActivity(), R.id.nav_host_fragment);
+        navController.navigate(R.id.inputFragment_to_resultsFragment, bundle);
     }
+
 
     private void resetInputViews() {
         AutoCompleteTextView[] addressFields = getAutoCompleteTextView(); // daftar inputan
