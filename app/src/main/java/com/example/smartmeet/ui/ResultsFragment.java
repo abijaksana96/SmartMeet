@@ -24,6 +24,8 @@ import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.example.smartmeet.R;
+import com.example.smartmeet.data.local.SearchHistory;
+import com.example.smartmeet.data.local.SearchHistoryDbHandler;
 import com.example.smartmeet.data.model.OverpassElement;
 import com.example.smartmeet.data.model.OverpassQueryResult;
 import com.example.smartmeet.data.model.Venue;
@@ -64,10 +66,30 @@ public class ResultsFragment extends Fragment implements VenueAdapter.OnVenueCli
     private VenueAdapter venueAdapter;
     private List<Venue> processedVenues = new ArrayList<>();
     private ArrayList<GeoPoint> participantGeoPoints = new ArrayList<>();
+    private SearchHistoryDbHandler dbHandler;
+    private static final String KEY_IS_HISTORY_SAVED = "is_history_saved";
+    private boolean isHistorySaved = false;
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        dbHandler = new SearchHistoryDbHandler(requireContext());
+        dbHandler.open();
+    }
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putBoolean(KEY_IS_HISTORY_SAVED, isHistorySaved);
+    }
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (savedInstanceState != null) {
+            isHistorySaved = savedInstanceState.getBoolean(KEY_IS_HISTORY_SAVED, false);
+        }
+
         if (getArguments() != null) {
             midpointLat = getArguments().getDouble("midpoint_lat");
             midpointLon = getArguments().getDouble("midpoint_lon");
@@ -163,6 +185,15 @@ public class ResultsFragment extends Fragment implements VenueAdapter.OnVenueCli
         if (map != null) map.onPause();
     }
 
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        if (dbHandler != null) {
+            dbHandler.close();
+            dbHandler = null;
+        }
+    }
+
     private void fetchVenues(double lat, double lon, String amenity) {
         String amenityQueryTag = "node[amenity=" + amenity.toLowerCase() + "]";
         if (amenity.equalsIgnoreCase("Halte")) {
@@ -180,23 +211,45 @@ public class ResultsFragment extends Fragment implements VenueAdapter.OnVenueCli
             overpassService.queryOverpass(body).enqueue(new Callback<OverpassQueryResult>() {
                 @Override
                 public void onResponse(Call<OverpassQueryResult> call, Response<OverpassQueryResult> response) {
+                    // Periksa apakah fragment masih attached
+                    if (!isAdded() || getActivity() == null) {
+                        return;
+                    }
+
                     if (response.isSuccessful() && response.body() != null) {
                         venueResults = response.body().getElements();
                         Log.d("ResultsFragment", "Venues found: " + venueResults.size());
-                        getActivity().runOnUiThread(() -> processAndDisplayVenues(venueResults));
+
+                        // Gunakan requireActivity() dengan try-catch
+                        try {
+                            requireActivity().runOnUiThread(() -> {
+                                if (isAdded()) {  // Double check
+                                    processAndDisplayVenues(venueResults);
+                                }
+                            });
+                        } catch (IllegalStateException e) {
+                            Log.e("ResultsFragment", "Fragment not attached", e);
+                            return;
+                        }
+
                         addVenueMarkersToMap(venueResults);
                     } else {
-                        Log.e("ResultsFragment", "Overpass API call failed: " + response.code() + " " + response.message());
-                        try {
-                            Log.e("ResultsFragment", "Error body: " + response.errorBody().string());
-                        } catch (Exception e) { e.printStackTrace(); }
-                        Toast.makeText(getContext(), "Gagal mencari tempat: " + response.message(), Toast.LENGTH_LONG).show();
+                        if (isAdded()) {  // Periksa sebelum mengakses context
+                            Log.e("ResultsFragment", "Overpass API call failed: " + response.code() + " " + response.message());
+                            try {
+                                Log.e("ResultsFragment", "Error body: " + response.errorBody().string());
+                            } catch (Exception e) { e.printStackTrace(); }
+                            Toast.makeText(requireContext(), "Gagal mencari tempat: " + response.message(), Toast.LENGTH_LONG).show();
+                        }
                     }
                 }
+
                 @Override
                 public void onFailure(Call<OverpassQueryResult> call, Throwable t) {
-                    Log.e("ResultsFragment", "Overpass API call error", t);
-                    Toast.makeText(getContext(), "Error Overpass: " + t.getMessage(), Toast.LENGTH_LONG).show();
+                    if (isAdded()) {  // Periksa sebelum mengakses context
+                        Log.e("ResultsFragment", "Overpass API call error", t);
+                        Toast.makeText(requireContext(), "Error Overpass: " + t.getMessage(), Toast.LENGTH_LONG).show();
+                    }
                 }
             });
         });
@@ -223,6 +276,11 @@ public class ResultsFragment extends Fragment implements VenueAdapter.OnVenueCli
         List<Venue> topVenues = processedVenues.size() > 5 ? new ArrayList<>(processedVenues.subList(0, 5)) : new ArrayList<>(processedVenues);
         venueAdapter.updateVenues(topVenues);
         addVenueMarkersToMapFromProcessed(topVenues);
+        // Pindahkan saving history ke method terpisah
+        if (!isHistorySaved) {
+            saveSearchToHistory(topVenues);
+            isHistorySaved = true;
+        }
     }
 
     private void addVenueMarkersToMap(List<OverpassElement> venues) {
@@ -279,5 +337,48 @@ public class ResultsFragment extends Fragment implements VenueAdapter.OnVenueCli
         intent.putExtra("MIDPOINT_LAT", midpointLat);
         intent.putExtra("MIDPOINT_LON", midpointLon);
         startActivity(intent);
+    }
+
+    private void saveSearchToHistory(List<Venue> venues) {
+        if (getArguments() == null || isHistorySaved) return;
+
+        ArrayList<String> inputAddresses = getArguments().getStringArrayList("input_addresses");
+        String selectedAmenity = getArguments().getString("amenity");
+
+        if (inputAddresses == null || selectedAmenity == null) return;
+
+        long currentTimestamp = System.currentTimeMillis();
+
+        Executors.newSingleThreadExecutor().execute(() -> {
+            // Tambahkan log untuk debugging
+            Log.d("ResultsFragment", "Checking for duplicates...");
+
+            List<SearchHistory> recentHistory = dbHandler.getRecentHistory(currentTimestamp - 5000);
+            boolean isDuplicate = false;
+
+            if (recentHistory != null) {
+                for (SearchHistory history : recentHistory) {
+                    if (history.getInputAddresses() != null &&
+                            history.getInputAddresses().equals(inputAddresses) &&
+                            history.getAmenity() != null &&
+                            history.getAmenity().equals(selectedAmenity)) {
+                        isDuplicate = true;
+                        Log.d("ResultsFragment", "Duplicate found!");
+                        break;
+                    }
+                }
+            }
+
+            if (!isDuplicate) {
+                Log.d("ResultsFragment", "Saving new history...");
+                dbHandler.insertSearchHistory(
+                        currentTimestamp,
+                        inputAddresses,
+                        selectedAmenity,
+                        venues
+                );
+                isHistorySaved = true;
+            }
+        });
     }
 }

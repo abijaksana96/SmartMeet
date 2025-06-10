@@ -12,11 +12,18 @@
         tools:layout="@layout/fragment_input">
         <action
             android:id="@+id/inputFragment_to_resultsFragment"
-            app:destination="@+id/resultsFragment"/>
+            app:destination="@id/resultsFragment" />
     </fragment>
+
     <fragment
         android:id="@+id/resultsFragment"
         android:name="com.example.smartmeet.ui.ResultsFragment"
         android:label="Hasil Pencarian"
         tools:layout="@layout/fragment_results" />
+
+    <fragment
+        android:id="@+id/historyFragment"
+        android:name="com.example.smartmeet.ui.HistoryFragment"
+        android:label="Riwayat Pencarian"
+        tools:layout="@layout/fragment_history" />
 </navigation>

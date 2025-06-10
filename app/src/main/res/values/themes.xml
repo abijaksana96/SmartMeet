@@ -30,4 +30,10 @@
         <item name="android:textSize">0sp</item> </style>
     <style name="CustomBottomNavTextActive" parent="TextAppearance.MaterialComponents.Caption">
         <item name="android:textSize">0sp</item> </style>
+
+    <style name="SmartMeetToolbarPopup" parent="ThemeOverlay.AppCompat.Light">
+        <!-- Ubah warna icon dan teks di popup menu -->
+        <item name="android:textColorPrimary">@color/light_on_surface</item>
+        <item name="android:itemBackground">@color/light_surface</item>
+    </style>
 </resources>
