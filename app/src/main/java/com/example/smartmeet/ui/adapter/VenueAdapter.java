@@ -9,64 +9,100 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.smartmeet.R;
 import com.example.smartmeet.data.model.Venue;
+import com.google.android.material.chip.Chip;
+
 import java.util.List;
 import java.util.Locale;
 
 public class VenueAdapter extends RecyclerView.Adapter<VenueAdapter.VenueViewHolder> {
-
-    private List<Venue> venueList;
-    private OnVenueClickListener listener;
+    private List<Venue> venues;
+    private final OnVenueClickListener listener;
 
     public interface OnVenueClickListener {
         void onVenueClick(Venue venue);
     }
 
-    public VenueAdapter(List<Venue> venueList, OnVenueClickListener listener) {
-        this.venueList = venueList;
+    public VenueAdapter(List<Venue> venues, OnVenueClickListener listener) {
+        this.venues = venues;
         this.listener = listener;
     }
 
     @NonNull
     @Override
     public VenueViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View itemView = LayoutInflater.from(parent.getContext())
+        View view = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.item_venue, parent, false);
-        return new VenueViewHolder(itemView);
+        return new VenueViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(@NonNull VenueViewHolder holder, int position) {
-        Venue currentVenue = venueList.get(position);
-        holder.venueName.setText(currentVenue.getName());
-        holder.venueType.setText(currentVenue.getType());
-        holder.venueDistance.setText(String.format(Locale.getDefault(), "%.0f m", currentVenue.getDistanceToMidpoint()));
-        // Set ikon berdasarkan tipe venue (opsional)
-        // holder.venueIcon.setImageResource(getIconForType(currentVenue.getType()));
-
-        holder.itemView.setOnClickListener(v -> listener.onVenueClick(currentVenue));
+        holder.bind(venues.get(position));
     }
 
     @Override
     public int getItemCount() {
-        return venueList.size();
+        return venues != null ? venues.size() : 0;
     }
 
     public void updateVenues(List<Venue> newVenues) {
-        this.venueList.clear();
-        this.venueList.addAll(newVenues);
+        this.venues = newVenues;
         notifyDataSetChanged();
     }
 
-    static class VenueViewHolder extends RecyclerView.ViewHolder {
-        ImageView venueIcon;
-        TextView venueName, venueType, venueDistance;
+    class VenueViewHolder extends RecyclerView.ViewHolder {
+        private final ImageView typeIcon;
+        private final TextView venueName;
+        private final TextView venueType;
+        private final Chip distanceChip;
 
-        VenueViewHolder(View view) {
-            super(view);
-            venueIcon = view.findViewById(R.id.venue_icon);
-            venueName = view.findViewById(R.id.venue_name);
-            venueType = view.findViewById(R.id.venue_type);
-            venueDistance = view.findViewById(R.id.venue_distance);
+        VenueViewHolder(@NonNull View itemView) {
+            super(itemView);
+            typeIcon = itemView.findViewById(R.id.venue_type_icon);
+            venueName = itemView.findViewById(R.id.venue_name);
+            venueType = itemView.findViewById(R.id.venue_type);
+            distanceChip = itemView.findViewById(R.id.distance_chip);
+
+            itemView.setOnClickListener(v -> {
+                int position = getAdapterPosition();
+                if (position != RecyclerView.NO_POSITION && listener != null) {
+                    listener.onVenueClick(venues.get(position));
+                }
+            });
+        }
+
+        void bind(Venue venue) {
+            venueName.setText(venue.getName());
+            venueType.setText(venue.getType());
+
+            // Set icon berdasarkan tipe venue
+            typeIcon.setImageResource(getVenueTypeIcon(venue.getType()));
+
+            // Format jarak
+            String distance = formatDistance(venue.getDistanceToMidpoint());
+            distanceChip.setText(distance);
+        }
+
+        private int getVenueTypeIcon(String type) {
+            switch (type.toLowerCase()) {
+                case "cafe":
+                    return R.drawable.ic_cafe;
+                case "restoran":
+                    return R.drawable.ic_restaurant;
+                case "halte":
+                    return R.drawable.ic_bus_stop;
+                case "taman":
+                    return R.drawable.ic_park;
+                default:
+                    return R.drawable.ic_venue; // fallback icon
+            }
+        }
+        private String formatDistance(double distance) {
+            if (distance < 1000) {
+                return String.format(Locale.getDefault(), "%.0fm", distance);
+            } else {
+                return String.format(Locale.getDefault(), "%.1fkm", distance/1000);
+            }
         }
     }
 }

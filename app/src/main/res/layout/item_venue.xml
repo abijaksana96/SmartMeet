@@ -1,44 +1,83 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="horizontal"
-    android:padding="12dp"
-    android:gravity="center_vertical">
+    android:layout_marginHorizontal="16dp"
+    android:layout_marginVertical="4dp"
+    app:cardElevation="0dp"
+    app:strokeWidth="1dp"
+    app:strokeColor="?attr/colorOutlineVariant"
+    app:cardCornerRadius="12dp"
+    android:clickable="true"
+    android:focusable="true"
+    android:checkable="true">
 
-    <ImageView
-        android:id="@+id/venue_icon"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:src="@mipmap/ic_launcher" />
-
-    <LinearLayout
-        android:layout_width="0dp"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:orientation="vertical"
-        android:layout_marginStart="12dp">
+        android:padding="16dp">
 
+        <!-- Venue Type Icon -->
+        <ImageView
+            android:id="@+id/venue_type_icon"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:padding="8dp"
+            android:background="@drawable/circle_background"
+            android:contentDescription="Tipe Venue"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:tint="?attr/colorPrimary"
+            tools:src="@drawable/ic_venue"/>
+
+        <!-- Venue Name -->
         <TextView
             android:id="@+id/venue_name"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="Nama Venue"
-            android:textSize="16sp"
-            android:textStyle="bold" />
+            android:layout_marginStart="12dp"
+            android:layout_marginEnd="8dp"
+            android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
+            android:maxLines="2"
+            android:ellipsize="end"
+            app:layout_constraintStart_toEndOf="@id/venue_type_icon"
+            app:layout_constraintEnd_toStartOf="@id/distance_chip"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="Nama Venue"/>
 
+        <!-- Venue Type -->
         <TextView
             android:id="@+id/venue_type"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+            android:textColor="?android:textColorSecondary"
+            android:maxLines="1"
+            android:ellipsize="end"
+            app:layout_constraintStart_toStartOf="@id/venue_name"
+            app:layout_constraintEnd_toEndOf="@id/venue_name"
+            app:layout_constraintTop_toBottomOf="@id/venue_name"
+            tools:text="Restoran"/>
+
+        <!-- Distance Chip -->
+        <com.google.android.material.chip.Chip
+            android:id="@+id/distance_chip"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Tipe Venue"
-            android:textSize="12sp"/>
-    </LinearLayout>
+            android:textAppearance="@style/TextAppearance.Material3.LabelSmall"
+            app:chipMinHeight="32dp"
+            app:chipIcon="@drawable/ic_distance"
+            app:chipIconSize="16dp"
+            app:chipIconTint="?attr/colorPrimary"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="500m"/>
 
-    <TextView
-        android:id="@+id/venue_distance"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="0 m"
-        android:textSize="14sp"/>
-</LinearLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</com.google.android.material.card.MaterialCardView>
