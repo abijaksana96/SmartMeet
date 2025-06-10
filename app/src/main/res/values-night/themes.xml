@@ -1,7 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme for dark mode. -->
-    <style name="Base.Theme.SmartMeet" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your dark theme here -->
+    <!-- Dark theme -->
+    <style name="Base.Theme.SmartMeet" parent="Theme.Material3.Dark.NoActionBar">
         <item name="colorPrimary">@color/biru_gelap_kebiruan</item>
         <item name="colorPrimaryVariant">@color/biru_sedang_kebiruan</item>
         <item name="colorOnPrimary">@color/dark_on_primary</item>
@@ -19,25 +19,4 @@
     </style>
 
     <style name="Theme.SmartMeet" parent="Base.Theme.SmartMeet" />
-
-    <style name="Widget.App.BottomNavigationView" parent="Widget.MaterialComponents.BottomNavigationView.PrimarySurface">
-        <item name="itemIconSize">24dp</item>
-        <item name="itemPaddingTop">16dp</item>
-        <item name="itemPaddingBottom">16dp</item>
-        <item name="itemTextAppearanceInactive">@style/CustomBottomNavTextInactive</item>
-        <item name="itemTextAppearanceActive">@style/CustomBottomNavTextActive</item>
-    </style>
-
-    <style name="CustomBottomNavTextInactive" parent="TextAppearance.MaterialComponents.Caption">
-        <item name="android:textSize">0sp</item>
-    </style>
-    <style name="CustomBottomNavTextActive" parent="TextAppearance.MaterialComponents.Caption">
-        <item name="android:textSize">0sp</item>
-    </style>
-
-    <style name="SmartMeetToolbarPopup" parent="ThemeOverlay.AppCompat.Dark">
-        <!-- Ubah warna icon dan teks di popup menu -->
-        <item name="android:textColorPrimary">@color/dark_on_surface</item>
-        <item name="android:itemBackground">@color/dark_surface</item>
-    </style>
 </resources>

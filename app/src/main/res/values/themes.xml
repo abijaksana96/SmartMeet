@@ -1,7 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
-    <style name="Base.Theme.SmartMeet" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your light theme here. -->
+    <!-- Light/Day theme -->
+    <style name="Base.Theme.SmartMeet" parent="Theme.Material3.Light.NoActionBar">
         <item name="colorPrimary">@color/biru_gelap_kebiruan</item>
         <item name="colorPrimaryVariant">@color/biru_sedang_kebiruan</item>
         <item name="colorOnPrimary">@color/light_on_primary</item>
@@ -15,25 +15,8 @@
         <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
         <item name="android:textColorPrimary">@color/light_on_background</item>
         <item name="android:textColorSecondary">@color/light_text_secondary</item>
-
         <item name="android:divider">@color/light_divider</item>
     </style>
 
     <style name="Theme.SmartMeet" parent="Base.Theme.SmartMeet" />
-
-    <style name="Widget.App.BottomNavigationView" parent="Widget.MaterialComponents.BottomNavigationView.PrimarySurface">
-        <item name="itemIconSize">24dp</item> <item name="itemPaddingTop">16dp</item>    <item name="itemPaddingBottom">16dp</item> <item name="itemTextAppearanceInactive">@style/CustomBottomNavTextInactive</item>
-        <item name="itemTextAppearanceActive">@style/CustomBottomNavTextActive</item>
-    </style>
-
-    <style name="CustomBottomNavTextInactive" parent="TextAppearance.MaterialComponents.Caption">
-        <item name="android:textSize">0sp</item> </style>
-    <style name="CustomBottomNavTextActive" parent="TextAppearance.MaterialComponents.Caption">
-        <item name="android:textSize">0sp</item> </style>
-
-    <style name="SmartMeetToolbarPopup" parent="ThemeOverlay.AppCompat.Light">
-        <!-- Ubah warna icon dan teks di popup menu -->
-        <item name="android:textColorPrimary">@color/light_on_surface</item>
-        <item name="android:itemBackground">@color/light_surface</item>
-    </style>
 </resources>

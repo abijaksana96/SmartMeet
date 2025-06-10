@@ -11,6 +11,7 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
+import androidx.core.widget.NestedScrollView;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -69,6 +70,7 @@ public class ResultsFragment extends Fragment implements VenueAdapter.OnVenueCli
     private SearchHistoryDbHandler dbHandler;
     private static final String KEY_IS_HISTORY_SAVED = "is_history_saved";
     private boolean isHistorySaved = false;
+    private BottomSheetBehavior<NestedScrollView> bottomSheetBehavior;
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
@@ -120,6 +122,38 @@ public class ResultsFragment extends Fragment implements VenueAdapter.OnVenueCli
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_results, container, false);
+
+        // Setup BottomSheet
+        NestedScrollView bottomSheet = view.findViewById(R.id.bottom_sheet);
+        bottomSheetBehavior = BottomSheetBehavior.from(bottomSheet);
+        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+
+        // Set peekHeight to show roughly 2.5 items
+        int peekHeight = (int) (getResources().getDisplayMetrics().density * 200); // 200dp
+        bottomSheetBehavior.setPeekHeight(peekHeight);
+
+        // Add callback untuk animasi map padding saat bottom sheet bergerak
+        bottomSheetBehavior.addBottomSheetCallback(new BottomSheetBehavior.BottomSheetCallback() {
+            @Override
+            public void onStateChanged(@NonNull View bottomSheet, int newState) {
+                // Optional: handle state changes
+            }
+
+            @Override
+            public void onSlide(@NonNull View bottomSheet, float slideOffset) {
+                // Adjust map padding based on bottom sheet position
+                if (map != null) {
+                    int padding = (int) (bottomSheet.getHeight() * slideOffset);
+                    map.setPadding(0, 0, 0, padding);
+                }
+            }
+        });
+
+        // Setup RecyclerView
+        RecyclerView recyclerView = view.findViewById(R.id.recycler_view_venues);
+        recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
+        venueAdapter = new VenueAdapter(processedVenues, this);
+        recyclerView.setAdapter(venueAdapter);
         map = view.findViewById(R.id.map);
         map.setTileSource(TileSourceFactory.MAPNIK);
         map.setMultiTouchControls(true);
@@ -165,11 +199,6 @@ public class ResultsFragment extends Fragment implements VenueAdapter.OnVenueCli
         if (midpointLat != 0 && midpointLon != 0 && selectedAmenity != null) {
             fetchVenues(midpointLat, midpointLon, selectedAmenity);
         }
-
-        LinearLayout bottomSheet = view.findViewById(R.id.bottom_sheet);
-        BottomSheetBehavior<LinearLayout> bottomSheetBehavior = BottomSheetBehavior.from(bottomSheet);
-        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
-        bottomSheetBehavior.setPeekHeight(100);
 
         return view;
     }

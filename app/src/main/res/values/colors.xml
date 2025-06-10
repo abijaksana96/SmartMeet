@@ -1,23 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="biru_gelap_kebiruan">#5e81ac</color>
-    <color name="biru_sedang_kebiruan">#81a1c1</color>
-    <color name="biru_muda_cerah">#88c0d0</color>
-    <color name="hijau_tosca_pudar">#8fbcbb</color>
+    <!-- Warna dasar -->
+    <color name="white">@android:color/white</color>
+    <color name="black">@android:color/black</color>
 
-    <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
+    <!-- Primary colors -->
+    <color name="biru_gelap_kebiruan">#FF1E3D59</color>
+    <color name="biru_sedang_kebiruan">#FF2D5B7F</color>
+    <color name="biru_muda_cerah">#FF64B5F6</color>
+    <color name="hijau_tosca_pudar">#FF80CBC4</color>
 
-    <color name="light_background">#FFFFFF</color>
-    <color name="light_surface">#FFFFFF</color>
-    <color name="light_on_background">#212121</color>
-    <color name="light_on_surface">#212121</color>
-    <color name="light_on_primary">#FFFFFF</color>
-    <color name="light_on_secondary">#FFFFFF</color>
-    <color name="light_text_secondary">#757575</color>
-    <color name="light_divider">#E0E0E0</color>
+    <!-- Light theme colors -->
+    <color name="light_background">#FFFFFFFF</color>
+    <color name="light_surface">#FFFFFFFF</color>
+    <color name="light_on_primary">#FFFFFFFF</color>
+    <color name="light_on_secondary">#FF000000</color>
+    <color name="light_on_background">#FF000000</color>
+    <color name="light_on_surface">#FF000000</color>
+    <color name="light_text_secondary">#FF757575</color>
+    <color name="light_divider">#FFDDDDDD</color>
 
-    <color name="dark_background">#121212</color> <color name="dark_surface">#2C2C2C</color>   <color name="dark_on_background">#E0E0E0</color> <color name="dark_on_surface">#E0E0E0</color>   <color name="dark_on_primary">#212121</color>  <color name="dark_on_secondary">#212121</color> <color name="dark_text_secondary">#B0B0B0</color>
-    <color name="dark_divider">#424242</color>
-
+    <!-- Dark theme colors -->
+    <color name="dark_background">#FF121212</color>
+    <color name="dark_surface">#FF1E1E1E</color>
+    <color name="dark_on_primary">#FFFFFFFF</color>
+    <color name="dark_on_secondary">#FFFFFFFF</color>
+    <color name="dark_on_background">#FFFFFFFF</color>
+    <color name="dark_on_surface">#FFFFFFFF</color>
+    <color name="dark_text_secondary">#FFB3B3B3</color>
+    <color name="dark_divider">#FF333333</color>
 </resources>

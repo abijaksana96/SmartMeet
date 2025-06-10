@@ -11,11 +11,14 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
+import com.google.android.material.appbar.MaterialToolbar;
+import com.google.android.material.button.MaterialButton;
 import com.google.gson.Gson;
 import com.example.smartmeet.R;
 import com.example.smartmeet.data.model.Venue;
@@ -45,8 +48,9 @@ import retrofit2.Response;
 public class DetailActivity extends AppCompatActivity {
 
     private MapView detailMap;
-    private TextView venueNameText, venueTypeText;
-    private Button openRouteExternalButton;
+    private TextView venueNameText, venueTypeText, distanceInfoText;
+    private ImageView typeIcon;
+    private MaterialButton openMapsButton;
     private Venue venue;
     private double midpointLat, midpointLon;
     private OpenRouteServiceApi orsService;
@@ -65,10 +69,19 @@ public class DetailActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_detail);
 
+        // Setup toolbar
+        MaterialToolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDisplayShowTitleEnabled(false);
+
+        // Initialize views
         detailMap = findViewById(R.id.detail_map);
         venueNameText = findViewById(R.id.detail_venue_name);
         venueTypeText = findViewById(R.id.detail_venue_type);
-        openRouteExternalButton = findViewById(R.id.button_open_route_external);
+        distanceInfoText = findViewById(R.id.distance_info);  // Tambahan untuk info jarak
+        openMapsButton = findViewById(R.id.button_open_maps);
+        typeIcon = findViewById(R.id.venue_type_icon);
 
         orsService = ApiClient.getOpenRouteServiceApi();
 
@@ -89,8 +102,16 @@ public class DetailActivity extends AppCompatActivity {
         }
 
         if (venue != null) {
+            // Set venue information
             venueNameText.setText(venue.getName());
             venueTypeText.setText(venue.getType());
+            typeIcon.setImageResource(getVenueTypeIcon(venue.getType()));
+
+            // Set distance info
+            String distanceText = String.format(Locale.getDefault(),
+                    "%.0fm dari titik tengah", venue.getDistanceToMidpoint());
+            distanceInfoText.setText(distanceText);
+
             setupMap();
             if (midpointLat != 0 && midpointLon != 0) {
                 fetchRoute();
@@ -102,21 +123,27 @@ public class DetailActivity extends AppCompatActivity {
             finish();
         }
 
-        // Lanjutan dari kode kamu (tepat setelah else { Toast.makeText ... finish(); ... }
-
-        openRouteExternalButton.setOnClickListener(v -> {
+        // Setup Google Maps button dengan intent yang lebih direct
+        openMapsButton.setOnClickListener(v -> {
             if (venue != null) {
-                String uri = String.format(Locale.ENGLISH, "geo:%f,%f?q=%f,%f(%s)",
-                        venue.getLatitude(), venue.getLongitude(), venue.getLatitude(), venue.getLongitude(), venue.getName());
-                Intent mapIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(uri));
+                // Langsung buka navigasi Google Maps
+                Uri gmmIntentUri = Uri.parse(String.format(Locale.ENGLISH,
+                        "google.navigation:q=%f,%f",
+                        venue.getLatitude(),
+                        venue.getLongitude()));
+
+                Intent mapIntent = new Intent(Intent.ACTION_VIEW, gmmIntentUri);
                 mapIntent.setPackage("com.google.android.apps.maps");
+
                 if (mapIntent.resolveActivity(getPackageManager()) != null) {
                     startActivity(mapIntent);
                 } else {
                     // Fallback ke browser jika Google Maps tidak ada
-                    Intent webIntent = new Intent(Intent.ACTION_VIEW,
-                            Uri.parse("https://www.google.com/maps/search/?api=1&query=" + venue.getLatitude() + "," + venue.getLongitude()));
-                    startActivity(webIntent);
+                    Uri webUri = Uri.parse(String.format(Locale.ENGLISH,
+                            "https://www.google.com/maps/dir/?api=1&destination=%f,%f",
+                            venue.getLatitude(),
+                            venue.getLongitude()));
+                    startActivity(new Intent(Intent.ACTION_VIEW, webUri));
                 }
             }
         });
@@ -291,6 +318,20 @@ public class DetailActivity extends AppCompatActivity {
         return new BitmapDrawable(getResources(), bitmap);
     }
 
+    private int getVenueTypeIcon(String type) {
+        switch (type.toLowerCase()) {
+            case "cafe":
+                return R.drawable.ic_cafe;
+            case "restoran":
+                return R.drawable.ic_restaurant;
+            case "halte":
+                return R.drawable.ic_bus_stop;
+            case "taman":
+                return R.drawable.ic_park;
+            default:
+                return R.drawable.ic_venue; // fallback icon
+        }
+    }
 
     @Override
     protected void onResume() {
@@ -302,5 +343,11 @@ public class DetailActivity extends AppCompatActivity {
     protected void onPause() {
         super.onPause();
         if (detailMap != null) detailMap.onPause();
+    }
+
+    @Override
+    public boolean onSupportNavigateUp() {
+        onBackPressed();
+        return true;
     }
 }
