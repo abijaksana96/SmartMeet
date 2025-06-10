@@ -1,6 +1,7 @@
 package com.example.smartmeet.ui;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.drawable.BitmapDrawable;
@@ -11,19 +12,25 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.example.smartmeet.R;
 import com.example.smartmeet.data.model.OverpassElement;
 import com.example.smartmeet.data.model.OverpassQueryResult;
+import com.example.smartmeet.data.model.Venue;
 import com.example.smartmeet.data.network.ApiClient;
 import com.example.smartmeet.data.network.OverpassApiService;
+import com.example.smartmeet.ui.adapter.VenueAdapter;
+import com.google.android.material.bottomsheet.BottomSheetBehavior;
 
 import org.osmdroid.config.Configuration;
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
@@ -32,7 +39,10 @@ import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.Marker;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -42,7 +52,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class ResultsFragment extends Fragment {
+public class ResultsFragment extends Fragment implements VenueAdapter.OnVenueClickListener {
     private MapView map = null;
     private double midpointLat, midpointLon;
     private ArrayList<String> participantLats, participantLons;
@@ -50,6 +60,12 @@ public class ResultsFragment extends Fragment {
     private OverpassApiService overpassService;
     private ExecutorService executorService = Executors.newSingleThreadExecutor(); // Atau gunakan yang sudah ada dari InputFragment jika di-pass
     private List<OverpassElement> venueResults = new ArrayList<>();
+    private RecyclerView recyclerViewVenues;
+    private VenueAdapter venueAdapter;
+    private List<Venue> processedVenues = new ArrayList<>();
+    // ArrayList untuk menyimpan koordinat peserta (GeoPoint) untuk perhitungan jarak yang lebih mudah
+    private ArrayList<GeoPoint> participantGeoPoints = new ArrayList<>();
+
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -70,6 +86,18 @@ public class ResultsFragment extends Fragment {
         Context ctx = getActivity().getApplicationContext();
         Configuration.getInstance().load(ctx, PreferenceManager.getDefaultSharedPreferences(ctx));
         Configuration.getInstance().setUserAgentValue(getActivity().getPackageName());
+
+        if (participantLats != null && participantLons != null) {
+            for (int i = 0; i < participantLats.size(); i++) {
+                try {
+                    double lat = Double.parseDouble(participantLats.get(i));
+                    double lon = Double.parseDouble(participantLons.get(i));
+                    participantGeoPoints.add(new GeoPoint(lat, lon));
+                } catch (NumberFormatException e) {
+                    Log.e("ResultsFragment", "Error parsing participant coordinates", e);
+                }
+            }
+        }
     }
 
     @Nullable
@@ -126,10 +154,26 @@ public class ResultsFragment extends Fragment {
         }
         map.invalidate(); // Refresh peta
 
+        recyclerViewVenues = view.findViewById(R.id.recycler_view_venues);
+        recyclerViewVenues.setLayoutManager(new LinearLayoutManager(getContext()));
+        venueAdapter = new VenueAdapter(processedVenues, (VenueAdapter.OnVenueClickListener) this);
+        recyclerViewVenues.setAdapter(venueAdapter);
+
         // Setelah peta siap, panggil API untuk cari tempat
         if (midpointLat != 0 && midpointLon != 0 && selectedAmenity != null) {
             fetchVenues(midpointLat, midpointLon, selectedAmenity);
         }
+
+        // Inisialisasi bottom sheet
+        LinearLayout bottomSheet = view.findViewById(R.id.bottom_sheet); // 'view' adalah root fragment, atau 'findViewById' langsung di Activity
+        BottomSheetBehavior<LinearLayout> bottomSheetBehavior = BottomSheetBehavior.from(bottomSheet);
+
+        // Atur state awal (misal collapsed)
+        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+
+        // Atur peek height (tinggi saat collapsed)
+        bottomSheetBehavior.setPeekHeight(100);
+
         return view;
     }
 
@@ -169,7 +213,8 @@ public class ResultsFragment extends Fragment {
                     if (response.isSuccessful() && response.body() != null) {
                         venueResults = response.body().getElements();
                         Log.d("ResultsFragment", "Venues found: " + venueResults.size());
-                        // Lanjutkan ke parsing hasil dan tampilkan di RecyclerView (Hari ke-5)
+                        getActivity().runOnUiThread(() -> processAndDisplayVenues(venueResults));
+
                         // Juga tambahkan marker untuk venue di peta
                         addVenueMarkersToMap(venueResults);
                     } else {
@@ -191,6 +236,46 @@ public class ResultsFragment extends Fragment {
         });
     }
 
+    private void processAndDisplayVenues(List<OverpassElement> elements) {
+        processedVenues.clear();
+        GeoPoint midpointGeo = new GeoPoint(midpointLat, midpointLon);
+
+        for (OverpassElement element : elements) {
+            if (element.getLat() != 0 && element.getLon() != 0 && element.getName() != null && !element.getName().isEmpty()) {
+                Venue venue = new Venue(
+                        element.getId(),
+                        element.getName(),
+                        element.getLat(),
+                        element.getLon(),
+                        element.getAmenityType() != null ? element.getAmenityType() : selectedAmenity
+                );
+
+                // Hitung jarak dari midpoint ke venue
+                // double distToMid = LocationUtil.haversineDistance(midpointLat, midpointLon, venue.getLatitude(), venue.getLongitude());
+                double distToMid = midpointGeo.distanceToAsDouble(new GeoPoint(venue.getLatitude(), venue.getLongitude()));
+                venue.setDistanceToMidpoint(distToMid);
+
+                // Scoring sederhana: Prioritaskan yang lebih dekat ke midpoint
+                // Semakin kecil skor, semakin baik. Untuk saat ini, jarak ke midpoint adalah skor.
+                // Anda bisa kembangkan: hitung total jarak dari semua peserta ke venue, dll.
+                // double score = distToMid;
+                // venue.setScore(score); // Tambahkan field score jika perlu
+
+                processedVenues.add(venue);
+            }
+        }
+
+        // Urutkan berdasarkan jarak ke midpoint (skor) - ascending
+        Collections.sort(processedVenues, Comparator.comparingDouble(Venue::getDistanceToMidpoint));
+
+        // Ambil top 5 (atau semua jika kurang dari 5)
+        List<Venue> topVenues = processedVenues.size() > 5 ? new ArrayList<>(processedVenues.subList(0, 5)) : new ArrayList<>(processedVenues);
+
+        venueAdapter.updateVenues(topVenues);
+        addVenueMarkersToMapFromProcessed(topVenues); // Update peta dengan venue yang sudah di-filter & proses
+    }
+
+
     private void addVenueMarkersToMap(List<OverpassElement> venues) {
         if (map == null || venues == null) return;
         for (OverpassElement venue : venues) {
@@ -205,5 +290,35 @@ public class ResultsFragment extends Fragment {
             }
         }
         map.invalidate(); // Refresh peta
+    }
+
+    private void addVenueMarkersToMapFromProcessed(List<Venue> venues) {
+        if (map == null || venues == null) return;
+        // Mungkin clear marker venue sebelumnya jika ada
+        // map.getOverlays().removeIf(overlay -> overlay instanceof Marker && ((Marker) overlay).getId() != null && ((Marker) overlay).getId().startsWith("venue_"));
+
+        for (Venue venue : venues) {
+            GeoPoint venuePoint = new GeoPoint(venue.getLatitude(), venue.getLongitude());
+            Marker venueMarker = new Marker(map);
+            venueMarker.setPosition(venuePoint);
+            venueMarker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
+            venueMarker.setTitle(venue.getName());
+            venueMarker.setSubDescription(String.format(Locale.getDefault(), "%.0f m dari titik tengah", venue.getDistanceToMidpoint()));
+            // venueMarker.setId("venue_" + venue.getId()); // Untuk identifikasi jika perlu remove
+            // venueMarker.setIcon(getResources().getDrawable(R.drawable.ic_venue_marker)); // Custom icon
+            map.getOverlays().add(venueMarker);
+        }
+        map.invalidate();
+    }
+
+    @Override
+    public void onVenueClick(Venue venue) {
+        // Hari ke-6: Buka DetailActivity
+        Intent intent = new Intent(getActivity(), DetailActivity.class);
+        intent.putExtra("VENUE_DATA", venue); // Venue harus Parcelable
+        // Kirim juga koordinat midpoint untuk perhitungan rute dari midpoint ke venue
+        intent.putExtra("MIDPOINT_LAT", midpointLat);
+        intent.putExtra("MIDPOINT_LON", midpointLon);
+        startActivity(intent);
     }
 }
