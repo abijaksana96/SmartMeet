@@ -57,6 +57,10 @@ public class InputFragment extends Fragment {
 
     private static final long DEBOUNCE_DELAY = 500;
 
+    private boolean isGeocodingError = false;
+    private int lastGeocodingVisibleCount = 0;
+    private List<String> lastGeocodingAddresses = new ArrayList<>();
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -334,41 +338,32 @@ public class InputFragment extends Fragment {
 
     // Fungsi geocoding untuk mendapatkan koordinat lokasi
     private void performGeocoding() {
-        geocodedResults.clear(); // bersihkan hasil geocode sebelumnya
+        geocodedResults.clear();
         final int totalAddresses = addresses.size();
         final int[] geocodingCompletedCount = {0};
+        isGeocodingError = false;
+        lastGeocodingVisibleCount = inputVisibleCount;
+        lastGeocodingAddresses = new ArrayList<>(addresses);
+
+        showLoadingOverlay(false);
 
         if (totalAddresses == 0) {
             Toast.makeText(getContext(), "Tidak ada alamat yang valid untuk di-geocode.", Toast.LENGTH_SHORT).show();
+            hideLoadingOverlay();
             return;
         }
 
         for (String address : addresses) {
-            // panggil fungsi search pada interface nominatim
             nominatimService.search(address, "json", 1, 1).enqueue(new Callback<List<GeoResult>>() {
                 @Override
                 public void onResponse(Call<List<GeoResult>> call, Response<List<GeoResult>> response) {
                     if (response.isSuccessful() && response.body() != null && !response.body().isEmpty()) {
-                        GeoResult result = response.body().get(0); // mengubah response indeks pertama ke class Georesult
-
-                        Log.d("InputFragment", "Geocoded " + address + ": " + result.getLat() + "," + result.getLon());
-
+                        GeoResult result = response.body().get(0);
                         synchronized (geocodedResults) {
                             geocodedResults.add(result);
                         }
                     } else {
-                        // Logging untuk proses debug
-                        Log.e("InputFragment", "Geocoding failed for " + address + ": " + response.code() + " - " + response.message());
-                        try {
-                            if (response.errorBody() != null) {
-                                Log.e("InputFragment", "Error Body: " + response.errorBody().string());
-                            }
-                        } catch (IOException e) {
-                            Log.e("InputFragment", "Error reading error body", e);
-                        }
-
-                        // Menampilkan pesan kesalahan ke user
-                        Toast.makeText(getContext(), "Gagal mendapatkan koordinat untuk: " + address, Toast.LENGTH_SHORT).show();
+                        isGeocodingError = true;
                     }
                     geocodingCompletedCount[0]++;
                     if (geocodingCompletedCount[0] == totalAddresses) {
@@ -378,8 +373,7 @@ public class InputFragment extends Fragment {
 
                 @Override
                 public void onFailure(Call<List<GeoResult>> call, Throwable t) {
-                    Log.e("InputFragment", "Geocoding error for " + address, t);
-                    Toast.makeText(getContext(), "Error jaringan saat geocoding: " + address, Toast.LENGTH_SHORT).show();
+                    isGeocodingError = true;
                     geocodingCompletedCount[0]++;
                     if (geocodingCompletedCount[0] == totalAddresses) {
                         onAllGeocodingCompleted();
@@ -389,60 +383,45 @@ public class InputFragment extends Fragment {
         }
     }
 
-    // Fungsi ketika semua geocoding berhasil
+    // Tambahkan logika midpoint dan pengiriman bundle ke ResultsFragment
     private void onAllGeocodingCompleted() {
-        if (geocodedResults.size() < addresses.size()) {
-            Toast.makeText(getContext(), "Beberapa alamat gagal di-geocode. Silakan periksa log.", Toast.LENGTH_LONG).show();
-            if (geocodedResults.size() < 2) {
-                Toast.makeText(getContext(), "Tidak cukup alamat yang berhasil di-geocode untuk melanjutkan.", Toast.LENGTH_LONG).show();
-                return;
-            }
+        if (geocodedResults.isEmpty()) {
+            showLoadingOverlay(true);
+            Toast.makeText(getContext(), "Semua alamat gagal di-geocode. Coba lagi!", Toast.LENGTH_LONG).show();
+            return;
         }
 
-        Log.d("InputFragment", "Semua alamat berhasil di-geocode: " + geocodedResults.size());
-
-        if (geocodedResults.size() == addresses.size() && !geocodedResults.isEmpty()) {
-            LocationUtil.Midpoint midpoint = locationUtil.calculateMidpoint(geocodedResults);
-            String selectedAmenity = binding.amenitySpinner.getSelectedItem().toString();
-
-            if (midpoint != null) {
-                Log.d("InputFragment", "Midpoint: " + midpoint.latitude + ", " + midpoint.longitude);
-                // Navigasi ke ResultsFragment
-                Bundle bundle = new Bundle();
-                bundle.putDouble("midpoint_lat", midpoint.latitude);
-                bundle.putDouble("midpoint_lon", midpoint.longitude);
-
-                // Kirim array String lat/lon
-                ArrayList<String> latitudes = new ArrayList<>();
-                ArrayList<String> longitudes = new ArrayList<>();
-                for (GeoResult res : geocodedResults) {
-                    latitudes.add(res.getLat());
-                    longitudes.add(res.getLon());
-                }
-                bundle.putStringArrayList("participant_lats", latitudes);
-                bundle.putStringArrayList("participant_lons", longitudes);
-                bundle.putString("amenity", selectedAmenity);
-
-                // Menggunakan NavController untuk navigasi
-                // Pastikan ID R.id.action_inputFragment_to_resultsFragment ada di nav_graph.xml
-                // <action android:id="@+id/action_inputFragment_to_resultsFragment"
-                //         app:destination="@id/resultsFragment" />
-                // Tambahkan action ini di dalam <fragment android:id="@+id/inputFragment" ... >
-                 NavController navController = Navigation.findNavController(requireActivity(), R.id.nav_host_fragment);
-                 navController.navigate(R.id.inputFragment_to_resultsFragment, bundle);
-
-                // Jika tidak pakai action, langsung ke ID tujuan:
-                // getParentFragmentManager().setFragmentResult("requestKey", bundle); // Cara alternatif kirim data
-                // Navigation.findNavController(getView()).navigate(R.id.resultsFragment, bundle);
-
-            } else {
-                Toast.makeText(getContext(), "Tidak bisa menghitung midpoint.", Toast.LENGTH_SHORT).show();
-            }
+        // Hitung midpoint
+        LocationUtil.Midpoint midpoint = locationUtil.calculateMidpoint(geocodedResults);
+        if (midpoint == null) {
+            Toast.makeText(getContext(), "Tidak bisa menghitung titik tengah.", Toast.LENGTH_SHORT).show();
+            return;
         }
 
-//        NavController navController = Navigation.findNavController(requireView());
-//        navController.navigate(R.id.inputFragment_to_resultsFragment);
+        // Ambil amenity yang dipilih (jika ada spinner)
+        String selectedAmenity = binding.amenitySpinner.getSelectedItem().toString();
+
+        // Siapkan bundle
+        Bundle bundle = new Bundle();
+        bundle.putDouble("midpoint_lat", midpoint.latitude);
+        bundle.putDouble("midpoint_lon", midpoint.longitude);
+
+        ArrayList<String> latitudes = new ArrayList<>();
+        ArrayList<String> longitudes = new ArrayList<>();
+        for (GeoResult res : geocodedResults) {
+            latitudes.add(res.getLat());
+            longitudes.add(res.getLon());
+        }
+        bundle.putStringArrayList("participant_lats", latitudes);
+        bundle.putStringArrayList("participant_lons", longitudes);
+        bundle.putString("amenity", selectedAmenity);
+
+        // Navigasi ke ResultsFragment
+        hideLoadingOverlay();
+        NavController navController = Navigation.findNavController(requireActivity(), R.id.nav_host_fragment);
+        navController.navigate(R.id.inputFragment_to_resultsFragment, bundle);
     }
+
 
     private void resetInputViews() {
         AutoCompleteTextView[] addressFields = getAutoCompleteTextView(); // daftar inputan
@@ -508,4 +487,28 @@ public class InputFragment extends Fragment {
         };
         return addressFields;
     }
+
+    private void showLoadingOverlay(boolean showRetry) {
+        binding.loadingOverlay.setVisibility(View.VISIBLE);
+        binding.retryButton.setVisibility(showRetry ? View.VISIBLE : View.GONE);
+        binding.geocodeProgress.setVisibility(showRetry ? View.GONE : View.VISIBLE);
+        binding.loadingText.setText(showRetry ? "Gagal geocoding. Coba lagi?" : "Sedang mencari koordinat alamat...");
+        setInputEnabled(false);
+    }
+
+    private void hideLoadingOverlay() {
+        binding.loadingOverlay.setVisibility(View.GONE);
+        setInputEnabled(true);
+    }
+
+    private void setInputEnabled(boolean enabled) {
+        for (AutoCompleteTextView input : getAutoCompleteTextView()) {
+            input.setEnabled(enabled);
+        }
+        binding.addButton.setEnabled(enabled);
+        binding.delButton.setEnabled(enabled);
+        binding.searchButton.setEnabled(enabled);
+        binding.amenitySpinner.setEnabled(enabled);
+    }
+
 }
